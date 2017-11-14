@@ -15,6 +15,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+
 import java.io.IOException;
 import java.util.Random;
 
@@ -28,8 +29,9 @@ public class SampleMnistNeuralNetWord {
 		int batchSize = 10;
 		int hiddenNum = 30;
 		int seed = 123456;
-		int numEpochs = 1;
-		double rate = 3.0d;
+		int numEpochs = 100;
+		//double rate = 3.0d;
+		double rate = 0.5;
 
 		MnistDataSetIterator trainItr = new MnistDataSetIterator(batchSize, true, seed);
 		MnistDataSetIterator testItr = new MnistDataSetIterator(batchSize, false, seed);
@@ -40,16 +42,15 @@ public class SampleMnistNeuralNetWord {
 				.iterations(1)
 				.activation(Activation.SIGMOID)
 				.learningRate(rate)
-				.weightInit(WeightInit.DISTRIBUTION)
-				.biasInit(new Random(seed).nextDouble())
 				.list()
 				.layer(0, new DenseLayer.Builder().nIn(numRows * numColumns).nOut(hiddenNum).build())
 				.layer(1, new DenseLayer.Builder().nIn(hiddenNum).nOut(hiddenNum).build())
-				.layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.SQUARED_LOSS)
-						.nIn(hiddenNum).nOut(outputNum).build())
+				.layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
+						.nIn(hiddenNum).nOut(outputNum).activation(Activation.SIGMOID).build())
 				.pretrain(false).backprop(true).build();
 
 		MultiLayerNetwork model = new MultiLayerNetwork(conf);
+		model.init();
 
 		for (int i = 0; i < numEpochs; i++) {
 			model.fit(trainItr);
@@ -61,6 +62,7 @@ public class SampleMnistNeuralNetWord {
 			}
 			System.out.println(evaluation.stats());
 			testItr.reset();
+			trainItr.reset();
 		}
 	}
 }
